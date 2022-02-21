@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<odoo>
+    <template id="vuejs_app_assets" name="VueJS app assets">
+        <!-- Styles  -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@5.8.55/css/materialdesignicons.min.css"/>
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css"/>
+        <link rel="stylesheet" href="https://unpkg.com/buefy/dist/buefy.min.css"/>
+
+        <link
+            id="link_css_main"
+            t-attf-href="/saas_mail_test/static/app/css/main.css"
+            rel="stylesheet"
+        />
+        <!-- External libs -->
+
+        <script src="https://unpkg.com/vue@2"></script>
+        <script src="https://unpkg.com/buefy/dist/buefy.min.js"></script>
+        <script src="https://unpkg.com/vue-router@3/dist/vue-router.js"></script>
+        <script src="https://unpkg.com/vue2-editor/dist/vue2-editor.umd.min.js"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+        <script src="https://unpkg.com/@ckeditor/ckeditor5-vue2"></script>
+
+        <script src="/saas_mail_test/static/app/lib/ckeditor5/build/ckeditor.js"></script>
+
+        <!-- Main app script -->
+        <script
+            id="script_app_main"
+            t-attf-src="/saas_mail_test/static/app/main.js"
+            type="module"
+        />
+    </template>
+</odoo>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="action_vuejs_app" model="ir.actions.act_url">
+        <field name="name">VueJS app</field>
+        <field name="url">/vuejs/app/#</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem
+        id="menu_vuejs_app"
+        name="VueJS"
+        action="action_vuejs_app"
+        sequence="300"
+        web_icon="saas_mail_test,static/description/icon.png"
+
+    />
+
+</odoo>

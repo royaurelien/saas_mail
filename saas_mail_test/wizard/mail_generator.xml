@@ -1,0 +1,53 @@
+<odoo>
+<data>
+<record model="ir.actions.act_window" id="action_mail_generator">
+    <field name="name">Mail Generator</field>
+    <field name="res_model">saas_mail.mail_generator</field>
+    <field name="view_mode">form,tree</field>
+    <!-- <field name="target">new</field> -->
+</record>
+
+<record id="view_saas_mail_generator_form" model="ir.ui.view">
+     <field name="name">saas_mail.mail_generator</field>
+     <field name="model">saas_mail.mail_generator</field>
+     <field name="arch" type="xml">
+        <form string="Compose email">
+
+            <group>
+                    <field name="subject"/>
+                    <field name="alias_id" widget="selection_badge" domain="[('alias_name', '!=', False)]" attrs="{'invisible': [('model_id', '!=', False)]}"/>
+                    <field name="model_id" attrs="{'invisible': [('alias_id', '!=', False)]}"/>
+                    <field name="from_recipient"/>
+                    <field name="to"/>
+                    <field name="cc"/>
+                    <field name="bcc"/>
+            </group>
+            <notebook>
+                <page name="help" string="Help">
+                    <field name="mail_helper" readonly="1" nolabel="1" widget="html"/>
+                </page>
+                <page name="body" string="Body">
+                    <field name="body" nolabel="1" widget="html"/>
+                </page>
+                <page name="eml" string="EML">
+                    <field name="eml" nolabel="1" widget="ace" readonly="1"/>
+                </page>
+            </notebook>
+
+            <footer>
+                <button name="action_confirm" string="Confirm" type="object" class="oe_highlight"/>
+                or
+                <button string="Cancel" class="oe_link" special="cancel"/>
+            </footer>
+        </form>
+     </field>
+ </record>
+
+<menuitem name="Mail Generator" id="menu_mail_generator"
+    parent="base.menu_email"
+    sequence="99"
+    groups="base.group_no_one"
+    action="action_mail_generator"/>
+
+</data>
+</odoo>

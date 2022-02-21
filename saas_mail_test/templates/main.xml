@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<odoo>
+    <template
+        id="vuejs_app_layout"
+        inherit_id="web.layout"
+        primary="True"
+        name="VueJS app layout"
+    >
+        <!--
+        <link type="image/x-icon" position="after">
+            <link rel="manifest" href="/shopfloor_mobile/manifest.json" />
+        </link>
+    -->
+    </template>
+    <template id="vuejs_app_main" name="Shopfloor app main">
+        <t t-call="saas_mail_test.vuejs_app_layout">
+            <!--
+            <t
+                t-set="x_icon"
+                t-value="'/shopfloor_mobile_base/static/wms/src/assets/icons/favicon-32x32.png?v=' + app_version"
+            />
+        -->
+            <t t-set="html_data" t-value="{'app_version': app_version}" />
+            <t t-set="title">VueJS app</t>
+            <t t-set="head">
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
+                <script type="text/javascript">
+          var shopfloor_app_info = {
+            app_version: "<t t-esc="app_version" />",
+            running_env: "<t t-esc="running_env" />",
+            auth_type: "<t t-esc="auth_type" />",
+            base_url: "<t t-esc="app_base_url" />",
+          };
+        </script>
+                <t t-call="saas_mail_test.vuejs_app_assets" />
+            </t>
+
+            <div id="app">
+                <section class="hero is-primary">
+                    <div class="hero-body">
+                      <p class="title">
+                        SaaS Mail
+                      </p>
+                      <p class="subtitle">
+                        Route finder
+                      </p>
+                    </div>
+                  </section>
+
+                <router-view></router-view>
+
+            </div>
+        </t>
+    </template>
+</odoo>
