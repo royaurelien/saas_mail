@@ -1,20 +1,53 @@
+
+
 export const Home = {
     data() {
     var self = this
       return {
-        count: 0,
+        count: 1,
+        subjectPrefix: 'TEST',
+        activeTab: 0,
+        showEml: true,
+        messages: [],
         rawValue: '',
         eml: '',
         file: {},
         dropFiles: [],
-        to: '',
-        mail_subject: '',
-        mail_from: '',
+        to: 'support',
+        mail_subject: 'test',
+        mailFrom: 'customer@domaine.com',
         html_content: '',
         isCC: false,
         isBCC: false,
+        isPlain: true,
         isDomainForced: false,
         forceDomain: 'test.com',
+        results: [],
+        columns: [
+            {
+                field: 'id',
+                label: 'ID',
+                width: '40',
+                numeric: true
+            },
+            {
+                field: 'record',
+                label: 'Record',
+            },
+            {
+                field: 'url',
+                label: 'Url',
+            },
+            {
+                field: 'create_date',
+                label: 'Date',
+                centered: true
+            },
+            {
+                field: 'error',
+                label: 'Error',
+            }
+        ],
         editor: ClassicEditor,
         editorData: '<p>Content of the editor.</p>',
         editorConfig: {
@@ -30,10 +63,13 @@ export const Home = {
       }
     },
     computed: {
+        autoSubject: function () {
+            return this.subjectPrefix+' #'+this.count
+        },
         domain: function() {
             return '@'+this.forceDomain
         },
-        mail_to: function() {
+        mailTo: function() {
             return this.to+'@'+this.forceDomain
         }
         // rawValue: function() {
@@ -41,27 +77,54 @@ export const Home = {
         //     return false
         // }
     },
-    // watch: {
-    //     editorData: function(){
-    //         this.data.raw_value = this.editor.getData();
-    //     }
-    // },
+    watch: {
+        eml: function (newValue, oldValue) {
+            if (newValue) {
+                if ('error' in newValue) {
+                    this.messages.push({
+                        type: 'is-danger',
+                        title: 'Error',
+                        content: newValue.error
+                    })
+
+
+                } else if ('record' in newValue) {
+                    this.messages.push({
+                        type: 'is-warning',
+                        title: 'Record found : '+newValue.record.name,
+                        // content: newValue.record.url,
+                        url: 'http://localhost:8069'+newValue.record.url
+                    })
+                }
+            }
+        }
+    },
     methods: {
+        setToFromAlias: function (payload) {
+            console.log(payload)
+            this.to = payload.data
+        },
         saveData: function (data) {
             console.log(data)
             this.rawValue = data
         },
         sendForm: function () {
-            console.log(this.mail_to)
+            console.log(this.mailTo)
             const data = {
-                to: this.mail_to,
-                subject: this.mail_subject,
-                from_recipient: this.mail_from,
+                to: this.mailTo,
+                subject: this.autoSubject,
+                from_recipient: this.mailFrom,
                 body: this.rawValue
             }
+            this.count += 1
             axios
             .post('/vuejs/data/generate', { params: { data } })
-            .then(response => (this.eml = response.data.result))
+            .then(response => (this.results.push(response.data.result.record)))
+            // .then(response => (this.eml = response.data.result))
+        },
+        viewRecord: function (url) {
+            console.log(url)
+            window.open(url, "_blank");
         }
     },
     template: `
@@ -69,24 +132,48 @@ export const Home = {
 <div class="container">
 
     <div class="columns">
-        <div class="column">
-            <h3 class="subtitle">Mail</h3>
+        <div class="column is-two-thirds">
 
-                <b-field horizontal><!-- Label left empty for spacing -->
-                    <p class="control">
-                        <b-button v-on:click="sendForm" label="Send" type="is-primary" />
-                        <b-button label="Reset" type="is-warning" />
-                    </p>
-                    <p class="control">
-                        <b-switch v-model="isCC">CC</b-switch>
-                    </p>
-                    <p class="control">
-                        <b-switch v-model="isBCC">BCC</b-switch>
-                    </p>
-                    <p class="control">
-                        <b-switch v-model="isDomainForced">Force domain</b-switch>
-                    </p>
-                </b-field>
+            <b-tabs v-model="activeTab">
+                <b-tab-item label="Basic">
+                    <from-contacts labelPosition="on-border"/>
+                    <select-alias @changeAlias="setToFromAlias"/>
+
+                    <b-field label="To" labelPosition="on-border">
+                        <b-input
+                            v-model="to"
+                            maxlength="30">
+                        </b-input>
+                        <p class="control">
+                            <span class="button is-static">{{ domain }}</span>
+                        </p>
+                    </b-field>
+
+                    <b-field horizontal><!-- Label left empty for spacing -->
+                        <span>{{ autoSubject }}</span>
+                        <p class="control">
+                            <b-button v-on:click="sendForm" label="Send" type="is-primary" />
+                            <b-button label="Reset" />
+                        </p>
+                    </b-field>
+
+                </b-tab-item>
+
+                <b-tab-item label="Advance">
+                    <b-field horizontal><!-- Label left empty for spacing -->
+                        <p class="control">
+                            <b-switch v-model="isPlain">Plain text</b-switch>
+                        </p>
+                        <p class="control">
+                            <b-switch v-model="isCC">CC</b-switch>
+                        </p>
+                        <p class="control">
+                            <b-switch v-model="isBCC">BCC</b-switch>
+                        </p>
+                        <p class="control">
+                            <b-switch v-model="isDomainForced">Force domain</b-switch>
+                        </p>
+                    </b-field>
 
                 <b-field label="Subject" labelPosition="on-border">
                     <b-input
@@ -108,7 +195,7 @@ export const Home = {
                     message="This email is invalid">
                     <b-input type="email"
                         value="john@customerdomain.com"
-                        v-model="mail_from"
+                        v-model="mailFrom"
                         maxlength="30">
                     </b-input>
                 </b-field>
@@ -139,11 +226,11 @@ export const Home = {
                     </b-input>
                 </b-field>
 
-                <b-field label="Message" label-position="on-border">
+                <b-field label="Message" v-if="isPlain" label-position="on-border">
                     <b-input maxlength="200" type="textarea"></b-input>
                 </b-field>
 
-                <ckeditor :editor="editor" v-model="editorData" :config="editorConfig"></ckeditor>
+                <ckeditor v-if="!isPlain" :editor="editor" v-model="editorData" :config="editorConfig"></ckeditor>
 
                 <b-field>
                 <b-upload v-model="dropFiles"
@@ -161,25 +248,52 @@ export const Home = {
                         </div>
                     </section>
                 </b-upload>
-            </b-field>
+                </b-field>
 
-            <div class="tags">
-                <span v-for="(file, index) in dropFiles"
-                    :key="index"
-                    class="tag is-primary" >
-                    {{file.name}}
-                    <button class="delete is-small"
-                        type="button"
-                        @click="deleteDropFile(index)">
-                    </button>
-                </span>
-            </div>
+                <div class="tags">
+                    <span v-for="(file, index) in dropFiles"
+                        :key="index"
+                        class="tag is-primary" >
+                        {{file.name}}
+                        <button class="delete is-small"
+                            type="button"
+                            @click="deleteDropFile(index)">
+                        </button>
+                    </span>
+                </div>
+            </b-tab-item>
+
+            <b-tab-item label="Help">
+                <mail-helper/>
+            </b-tab-item>
+
+            <b-tab-item :visible="showEml" label="EML">
+                <pre>{{ eml }}</pre>
+            </b-tab-item>
+
+            <b-tab-item label="History">
+            <b-table :data="results" :columns="columns"></b-table>
+            </b-tab-item>
+
+        </b-tabs>
+    </div>
+    <div class="column">
+        <b-table :data="results" :columns="columns"></b-table>
+        <div v-for="(message, index) in messages" :key="index">
+            <b-message
+                :title="message.title"
+                :type="message.type"
+                aria-close-label="Close message">
+                {{ message.content }}
+
+                <b-button v-if="message.url" @click="viewRecord(message.url)">
+                    View record
+                </b-button>
+
+            </b-message>
         </div>
-        <div class="column">
-            <h3 class="subtitle">EML</h3>
-            <pre>{{ dropFiles }}</pre>
-            <pre>{{ eml }}</pre>
-        </div>
+
+    </div>
     </div>
 </div>
 `

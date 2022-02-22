@@ -13,10 +13,9 @@ Vue.component('select-contacts', {
     },
     template:
     `
-    <b-field>
+    <b-field horizontal label="Contact">
         <b-select
-            multiple
-            native-size="3"
+            placeholder="Select a contact"
             v-model="selectedRecipients">
             <option
             v-for="item in contacts"

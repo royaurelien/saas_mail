@@ -24,11 +24,18 @@
 
         <script src="/saas_mail_test/static/app/lib/ckeditor5/build/ckeditor.js"></script>
 
+        <script
+            id="script_app_odoo"
+            t-attf-src="/saas_mail_test/static/app/components/odoo.js"
+            type="module"
+        />
+
         <!-- Main app script -->
         <script
             id="script_app_main"
             t-attf-src="/saas_mail_test/static/app/main.js"
             type="module"
         />
+
     </template>
 </odoo>

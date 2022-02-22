@@ -1,10 +1,13 @@
 // 1. Define route components.
 
+// import "./css/main.css";
+
 import {Home} from './views/Home.js'
 import {About} from './views/About.js'
+import {} from './components/odoo.js'
 
 
-Vue.component('navbar-custom', {
+const customNavbar = Vue.component('navbar-custom', {
     data: function () {
       return {
         info: [],
@@ -39,7 +42,10 @@ Vue.use( CKEditor );
 // You can pass in additional options here, but let's
 // keep it simple for now.
 const router = new VueRouter({
-    routes // short for `routes: routes`
+    routes: routes,
+    components: [
+      customNavbar
+    ]
   })
 
   // 4. Create and mount the root instance.
