@@ -4,50 +4,27 @@ export const Home = {
     data() {
     var self = this
       return {
+        debug: false,
         count: 1,
-        subjectPrefix: 'TEST',
+        subjectPrefix: 'test:',
         activeTab: 0,
         showEml: true,
         messages: [],
         rawValue: '',
+        textMessage: 'Auto message.',
         eml: '',
         file: {},
         dropFiles: [],
-        to: 'support',
-        mail_subject: 'test',
-        mailFrom: 'customer@domaine.com',
+        to: '',
+        mailSubject: '',
+        mailFrom: '',
         html_content: '',
         isCC: false,
         isBCC: false,
-        isPlain: true,
+        isText: true,
         isDomainForced: false,
         forceDomain: 'test.com',
         results: [],
-        columns: [
-            {
-                field: 'id',
-                label: 'ID',
-                width: '40',
-                numeric: true
-            },
-            {
-                field: 'record',
-                label: 'Record',
-            },
-            {
-                field: 'url',
-                label: 'Url',
-            },
-            {
-                field: 'create_date',
-                label: 'Date',
-                centered: true
-            },
-            {
-                field: 'error',
-                label: 'Error',
-            }
-        ],
         editor: ClassicEditor,
         editorData: '<p>Content of the editor.</p>',
         editorConfig: {
@@ -64,7 +41,7 @@ export const Home = {
     },
     computed: {
         autoSubject: function () {
-            return this.subjectPrefix+' #'+this.count
+            return this.subjectPrefix+' '+this.mailSubject+' ('+this.count+')'
         },
         domain: function() {
             return '@'+this.forceDomain
@@ -79,30 +56,57 @@ export const Home = {
     },
     watch: {
         eml: function (newValue, oldValue) {
+            this.activeTab = 4
             if (newValue) {
                 if ('error' in newValue) {
-                    this.messages.push({
-                        type: 'is-danger',
-                        title: 'Error',
-                        content: newValue.error
+                    this.success('No record created', 'is-warning')
+                    this.results.push({
+                        desc: newValue.error,
+                        subject: newValue.subject,
+                        from: this.mailFrom,
+                        to: this.mailTo
                     })
+                    // this.messages.push({
+                    //     type: 'is-danger',
+                    //     title: 'Error',
+                    //     content: newValue.error
+                    // })
 
 
                 } else if ('record' in newValue) {
-                    this.messages.push({
-                        type: 'is-warning',
-                        title: 'Record found : '+newValue.record.name,
-                        // content: newValue.record.url,
-                        url: 'http://localhost:8069'+newValue.record.url
+                    this.success('New record found', 'is-success')
+                    this.results.push({
+                        id: newValue.record.id,
+                        name: newValue.record.name,
+                        url: newValue.record.url,
+                        desc: newValue.record.desc,
+                        subject: newValue.record.subject,
+                        date: newValue.record.create_date,
+                        from: this.mailFrom,
+                        to: this.mailTo
                     })
+                    // this.messages.push({
+                    //     type: 'is-warning',
+                    //     title: 'Record found : '+newValue.record.name,
+                    //     // content: newValue.record.url,
+                    //     url: 'http://localhost:8069'+newValue.record.url
+                    // })
                 }
             }
         }
     },
     methods: {
-        setToFromAlias: function (payload) {
-            console.log(payload)
+        success: function (message, type) {
+            this.$buefy.toast.open({
+                message: message,
+                type: type
+            })
+        },
+        setTo: function (payload) {
             this.to = payload.data
+        },
+        setFrom: function (payload) {
+            this.mailFrom = payload.data
         },
         saveData: function (data) {
             console.log(data)
@@ -114,13 +118,13 @@ export const Home = {
                 to: this.mailTo,
                 subject: this.autoSubject,
                 from_recipient: this.mailFrom,
-                body: this.rawValue
+                body: this.isText ? this.textMessage : this.rawValue
             }
             this.count += 1
             axios
             .post('/vuejs/data/generate', { params: { data } })
-            .then(response => (this.results.push(response.data.result.record)))
-            // .then(response => (this.eml = response.data.result))
+            // .then(response => (this.results.push(response.data.result.record)))
+            .then(response => (this.eml = response.data.result))
         },
         viewRecord: function (url) {
             console.log(url)
@@ -132,37 +136,48 @@ export const Home = {
 <div class="container">
 
     <div class="columns">
-        <div class="column is-two-thirds">
+        <div class="column">
 
             <b-tabs v-model="activeTab">
                 <b-tab-item label="Basic">
-                    <from-contacts labelPosition="on-border"/>
-                    <select-alias @changeAlias="setToFromAlias"/>
+                    <div class="columns">
+                        <div class="column">
+                            <from-contacts required labelPosition="on-border" @changeFromValue="setFrom"/>
+                        </div>
+                        <div class="column">
+                        <b-field label="To / Alias" labelPosition="on-border">
+                                <select-alias @changeAlias="setTo"/>
 
-                    <b-field label="To" labelPosition="on-border">
-                        <b-input
-                            v-model="to"
-                            maxlength="30">
-                        </b-input>
-                        <p class="control">
-                            <span class="button is-static">{{ domain }}</span>
-                        </p>
-                    </b-field>
+                                <b-input v-model="to" required></b-input>
+                                <p class="control">
+                                    <span class="button is-static">{{ domain }}</span>
+                                </p>
+                            </b-field>
+                        </div>
+                        <div class="column">
 
-                    <b-field horizontal><!-- Label left empty for spacing -->
-                        <span>{{ autoSubject }}</span>
-                        <p class="control">
-                            <b-button v-on:click="sendForm" label="Send" type="is-primary" />
-                            <b-button label="Reset" />
-                        </p>
-                    </b-field>
+                            <b-field label="Subject" labelPosition="on-border">
+                                <b-input
+                                    disabled
+                                    v-model="autoSubject">
+                                </b-input>
+                                <p class="control">
+                                    <b-button v-on:click="sendForm" label="Send" type="is-primary" />
+                                </p>
+                            </b-field>
+                        </div>
+                    </div>
 
                 </b-tab-item>
 
                 <b-tab-item label="Advance">
                     <b-field horizontal><!-- Label left empty for spacing -->
                         <p class="control">
-                            <b-switch v-model="isPlain">Plain text</b-switch>
+                        <b-numberinput size="is-small" controls-alignment="right" controls-position="compact" v-model="count" :min="1" :max="1000"></b-numberinput>
+                        </p>
+
+                        <p class="control">
+                            <b-switch v-model="isText">Plain text</b-switch>
                         </p>
                         <p class="control">
                             <b-switch v-model="isCC">CC</b-switch>
@@ -177,7 +192,7 @@ export const Home = {
 
                 <b-field label="Subject" labelPosition="on-border">
                     <b-input
-                        placeholder="Subject..." v-model="mail_subject">
+                        placeholder="Subject..." v-model="mailSubject">
                     </b-input>
                 </b-field>
 
@@ -226,11 +241,11 @@ export const Home = {
                     </b-input>
                 </b-field>
 
-                <b-field label="Message" v-if="isPlain" label-position="on-border">
-                    <b-input maxlength="200" type="textarea"></b-input>
+                <b-field label="Message" v-if="isText" label-position="on-border">
+                    <b-input maxlength="200" type="textarea" v-model="textMessage"></b-input>
                 </b-field>
 
-                <ckeditor v-if="!isPlain" :editor="editor" v-model="editorData" :config="editorConfig"></ckeditor>
+                <ckeditor v-if="!isText" :editor="editor" v-model="editorData" :config="editorConfig"></ckeditor>
 
                 <b-field>
                 <b-upload v-model="dropFiles"
@@ -268,16 +283,102 @@ export const Home = {
             </b-tab-item>
 
             <b-tab-item :visible="showEml" label="EML">
-                <pre>{{ eml }}</pre>
+                <pre>{{ eml.eml }}</pre>
             </b-tab-item>
 
             <b-tab-item label="History">
-            <b-table :data="results" :columns="columns"></b-table>
+                <b-table
+                    :data="results"
+                    >
+                    <b-table-column
+                    field="id"
+                    label="ID"
+                    width="40"
+                    sortable
+                    v-slot="props"
+                >
+                    <template>
+                        {{ props.row.id }}
+                    </template>
+                    </b-table-column>
+
+                    <b-table-column
+                        field="from"
+                        label="From"
+                        sortable
+                        v-slot="props"
+                    >
+                        <template>
+                            {{ props.row.from }}
+                        </template>
+                    </b-table-column>
+
+                    <b-table-column
+                        field="to"
+                        label="To"
+                        sortable
+                        v-slot="props"
+                    >
+                        <template>
+                            {{ props.row.to }}
+                        </template>
+                    </b-table-column>
+
+                    <b-table-column
+                        field="subject"
+                        label="Subject"
+                        sortable
+                        v-slot="props"
+                    >
+                        <template>
+                            {{ props.row.subject }}
+                        </template>
+                    </b-table-column>
+
+                    <b-table-column
+                        field="name"
+                        label="Record"
+                        sortable
+                        v-slot="props"
+                    >
+                        <template>
+                            {{ props.row.name }}
+                        </template>
+                    </b-table-column>
+
+                    <b-table-column
+                        field="desc"
+                        label="Desc"
+                        sortable
+                        v-slot="props"
+                    >
+                        <template>
+                            {{ props.row.desc }}
+                        </template>
+                    </b-table-column>
+
+                    <b-table-column field="date" label="Date" centered v-slot="props">
+                        <span class="tag is-success">
+                            {{ new Date(props.row.date).toLocaleTimeString() }}
+                        </span>
+                    </b-table-column>
+
+                    <b-table-column field="url" centered v-slot="props">
+                        <b-button tag="a"
+                            v-if="props.row.url"
+                            size="is-small"
+                            :href="props.row.url"
+                            target="_blank">
+                                View
+                        </b-button>
+                    </b-table-column>
+
+                </b-table>
             </b-tab-item>
 
         </b-tabs>
     </div>
-    <div class="column">
+    <div class="column" v-if="debug">
         <b-table :data="results" :columns="columns"></b-table>
         <div v-for="(message, index) in messages" :key="index">
             <b-message

@@ -5,7 +5,7 @@ Vue.component("select-alias", {
     data: function () {
         return {
             items: [],
-            selectedItem: [],
+            selectedItem: null,
         }
     },
     mounted () {
@@ -14,16 +14,13 @@ Vue.component("select-alias", {
         .then(response => (this.items = response.data.result))
     },
     watch: {
-        value: {
-            selectedItem: function (newVal, oldVal) {
-                this.value = newVal;
-                this.$emit("changeAlias", {data: this.value});
-            },
-        },
+        selectedItem: function (newVal, oldVal) {
+            this.value = newVal;
+            this.$emit("changeAlias", {data: this.value});
+        }
     },
     template:
     `
-    <b-field label="Alias" labelPosition="on-border">
         <b-select
             v-model="selectedItem">
             <option
@@ -31,9 +28,8 @@ Vue.component("select-alias", {
             :value="item.alias_name"
             :key="item.id">
             {{ item.alias_name }}
-        </option>
+            </option>
         </b-select>
-    </b-field>
     `
 });
 
@@ -87,6 +83,12 @@ Vue.component('mail-helper', {
                         .indexOf(this.email.toLowerCase()) >= 0
                 )
             })
+        }
+    },
+    watch: {
+        email: function (newVal, oldVal) {
+            this.value = newVal;
+            this.$emit("changeFromValue", {data: this.value});
         }
     },
     template:

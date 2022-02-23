@@ -69,7 +69,10 @@ class ReceiveEmail(http.Controller):
         try:
             res_id = env['mail.thread'].sudo().message_process(False, eml)
         except ValueError as error:
-            data['error'] = error
+            data.update({
+                'error': error,
+                'subject': vals.get('subject'),
+            })
             return data
 
         _logger.warning(eml)
@@ -93,6 +96,7 @@ class ReceiveEmail(http.Controller):
                 record_value = {
                     'name': record.name_get()[0][1],
                     'id': res_id,
+                    'subject': vals.get('subject'),
                     'model': res_model,
                     'desc': _(record._description),
                     'create_date': record.create_date,
